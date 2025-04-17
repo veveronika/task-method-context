@@ -2,14 +2,15 @@ import { EventEmitter } from './EventEmitter';
 
 export const obj = {
     count: 0,
-    callback: function() {
+    callback() {
         this.count++;
     },
     subscribe() {
-        EventEmitter.on('click', this.callback.bind(this));
+        this.boundCallback = this.callback.bind(this);
+        EventEmitter.on('click', this.boundCallback);
     },
     unsubscribe() {
-        EventEmitter.off('click', this.callback.bind(this));
+        EventEmitter.off('click', this.boundCallback);
     },
 };
 
@@ -34,7 +35,7 @@ export const EventEmitter = {
     off(eventName, callback) {
         const existingHandlers = this.handlers.get(eventName);
         if (existingHandlers) {
-            const handlerIndex = existingHandlers.find(
+            const handlerIndex = existingHandlers.findIndex(
                 (handler) => handler === callback,
             );
             if (handlerIndex !== -1) {
