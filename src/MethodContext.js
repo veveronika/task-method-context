@@ -1,26 +1,57 @@
 import { EventEmitter } from './EventEmitter';
 
-/*
-1) В методе subscribe подпишитесь на событие click с помощью EventEmitter.on(eventName, callback).
-В обработчике нужно увеличивать значение поля count на 1
-2)В методе unsubscribe отпишитесь от события click с помощью EventEmitter.off(eventName, callback).
-В качестве callback нужно передавать тот же самый обработчик, который был передан при подписке.
- */
 export const obj = {
     count: 0,
-    subscribe() {},
-    unsubscribe() {},
+    callback() {
+        this.count++;
+    },
+    subscribe() {
+        this.boundCallback = this.callback.bind(this);
+        EventEmitter.on('click', this.boundCallback);
+    },
+    unsubscribe() {
+        EventEmitter.off('click', this.boundCallback);
+    },
 };
 
-/*
-Сделайте так, чтобы метод first вызывал метод second со своими аргументами, но в обратном порядке:
-
-obj1.first(1, 2, 3);
-// Внутренний вызов должен быть равносилен obj1.second(3, 2, 1)
- */
 export const obj1 = {
-    first(...args) {},
+    first(...args) {
+        this.second(...args.reverse());
+    },
     second() {
-        // здесь ничего писать не нужно
+    },
+};
+
+export const EventEmitter = {
+    handlers: new Map(),
+    on(eventName, callback) {
+        const existingHandlers = this.handlers.get(eventName);
+        if (existingHandlers) {
+            existingHandlers.push(callback);
+        } else {
+            this.handlers.set(eventName, [callback]);
+        }
+    },
+    off(eventName, callback) {
+        const existingHandlers = this.handlers.get(eventName);
+        if (existingHandlers) {
+            const handlerIndex = existingHandlers.findIndex(
+                (handler) => handler === callback,
+            );
+            if (handlerIndex !== -1) {
+                existingHandlers.splice(handlerIndex, 1);
+            }
+            if (existingHandlers.length === 0) {
+                this.handlers.delete(eventName);
+            }
+        }
+    },
+    emit(eventName) {
+        const existingHandlers = this.handlers.get(eventName);
+        if (existingHandlers) {
+            existingHandlers.forEach((callback) => {
+                callback();
+            });
+        }
     },
 };
